@@ -93,7 +93,7 @@ pipeline {
                 script {
                     sh '''
                         echo "Configuring kubeconfig for EKS..."
-                        aws eks --region $AWS_REGION update-kubeconfig --name $EKS_CLUSTER
+                        aws eks --region $AWS_REGION update-kubeconfig --name deepakcluster
 
                         echo "Applying Kubernetes manifests..."
                         kubectl apply -f deployment.yaml
