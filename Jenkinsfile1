@@ -22,7 +22,7 @@ pipeline {
             steps {
                 checkout scmGit(
                     branches: [[name: '*/main']],
-                    userRemoteConfigs: [[url: 'https://github.com/ASKFORTESAWS/Book-My-Show.git']]
+                    userRemoteConfigs: [[https://github.com/vasuodugu/Book-My-Show.git/Book-My-Show.git']]
                 )
                 sh 'ls -la'
             }
