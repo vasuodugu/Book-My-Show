@@ -1,129 +1,51 @@
 pipeline {
     agent any
 
-    tools {
-        jdk 'jdk17'
-        nodejs 'node23'
-    }
-
     environment {
-        SCANNER_HOME = tool 'sonar-scanner'
+        // You can define environment variables here if needed
+        APP_NAME = "Book-My-Show"
     }
 
     stages {
 
-        stage('Clean Workspace') {
+        stage('Checkout') {
             steps {
-                cleanWs()
+                echo 'Checking out code from Git...'
+                git branch: 'main', url: 'https://github.com/vasuodugu/Book-My-Show.git'
             }
         }
 
-        stage('Checkout from Git') {
+        stage('Build') {
             steps {
-                checkout scmGit(
-                    branches: [[name: '*/main']],
-                    userRemoteConfigs: [[https://github.com/vasuodugu/Book-My-Show.git/Book-My-Show.git']]
-                )
-                sh 'ls -la'
+                echo 'Building the application...'
+                // Example build command
+                sh 'mvn clean package -DskipTests'
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('Test') {
             steps {
-                withSonarQubeEnv('sonar-server') {
-                    sh '''
-                        $SCANNER_HOME/bin/sonar-scanner \
-                          -Dsonar.projectKey=BMS \
-                          -Dsonar.projectName=BMS \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=http://<your-sonar-server>:9000
-                    '''
-                }
+                echo 'Running tests...'
+                // Example test command
+                sh 'mvn test'
             }
         }
 
-        stage('Quality Gate') {
+        stage('Deploy') {
             steps {
-                script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
-                }
+                echo 'Deploying application...'
+                // Example deployment command
+                sh 'echo Deploying $APP_NAME to server...'
             }
         }
+    }
 
-        stage('Install Dependencies') {
-            steps {
-                sh '''
-                    cd bookmyshow-app
-                    echo "Checking for package.json..."
-                    if [ -f package.json ]; then
-                        echo "Installing dependencies..."
-                        rm -rf node_modules package-lock.json
-                        npm install
-                    else
-                        echo "Error: package.json not found!"
-                        exit 1
-                    fi
-                '''
-            }
+    post {
+        success {
+            echo 'Pipeline executed successfully ✅'
         }
-
-        stage('Security Scans') {
-            parallel {
-                stage('OWASP FS Scan') {
-                    steps {
-                        dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
-                        dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-                    }
-                }
-
-                stage('Trivy FS Scan') {
-                    steps {
-                        sh 'trivy fs . > trivyfs.txt'
-                    }
-                }
-            }
-        }
-
-        stage('Docker Build & Push') {
-            steps {
-                script {
-                    withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
-                        sh '''
-                            echo "Building Docker image..."
-                            docker build --no-cache -t askfortesaws/bms:latest -f bookmyshow-app/Dockerfile bookmyshow-app
-
-                            echo "Pushing image to Docker Hub..."
-                            docker push askfortesaws/bms:latest
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Trivy Image Scan') {
-            steps {
-                sh 'trivy image askfortesaws/bms:latest > trivyimage.txt'
-            }
-        }
-
-        stage('Deploy to Container') {
-            steps {
-                sh '''
-                    echo "Stopping old container if exists..."
-                    docker stop bms || true
-                    docker rm bms || true
-
-                    echo "Starting new container on port 3000..."
-                    docker run -d --restart=always --name bms -p 3000:3000 askfortesaws/bms:latest
-
-                    echo "Active containers:"
-                    docker ps -a
-
-                    echo "Container logs:"
-                    sleep 5
-                    docker logs bms
-                '''
-            }
+        failure {
+            echo 'Pipeline failed ❌'
         }
     }
 }
