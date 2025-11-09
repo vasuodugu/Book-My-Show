@@ -1,51 +1,46 @@
 pipeline {
     agent any
 
-    environment {
-        // You can define environment variables here if needed
-        APP_NAME = "Book-My-Show"
-    }
-
     stages {
-
         stage('Checkout') {
             steps {
-                echo 'Checking out code from Git...'
-                git branch: 'main', url: 'https://github.com/vasuodugu/Book-My-Show.git'
+                echo "Checking out code from Git..."
+                git url: 'https://github.com/vasuodugu/Book-My-Show.git', branch: 'main'
             }
         }
 
         stage('Build') {
             steps {
-                echo 'Building the application...'
-                // Example build command
-                sh 'mvn clean package -DskipTests'
+                echo "Building the application..."
+                dir('Book-My-Show') { // 👈 go inside the folder that contains pom.xml
+                    sh 'mvn clean package -DskipTests'
+                }
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Running tests...'
-                // Example test command
-                sh 'mvn test'
+                echo "Running tests..."
+                dir('Book-My-Show') {
+                    sh 'mvn test'
+                }
             }
         }
 
         stage('Deploy') {
             steps {
-                echo 'Deploying application...'
-                // Example deployment command
-                sh 'echo Deploying $APP_NAME to server...'
+                echo "Deploying the application..."
+                // your deploy commands
             }
         }
     }
 
     post {
-        success {
-            echo 'Pipeline executed successfully ✅'
-        }
         failure {
-            echo 'Pipeline failed ❌'
+            echo "Pipeline failed ❌"
+        }
+        success {
+            echo "Pipeline completed successfully ✅"
         }
     }
 }
