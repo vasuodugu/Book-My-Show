@@ -43,7 +43,7 @@ pipeline {
         stage('Quality Gate') {
             steps {
                 script {
-                    waitForQualityGate abortPipeline: true, credentialsId: 'Sonar-token'
+                    waitForQualityGate abortPipeline: true, credentialsId: '888'
                 }
             }
         }
@@ -65,7 +65,7 @@ pipeline {
 
         stage('OWASP Scan') {
             steps {
-                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DEP-CHECK'
                 dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
             }
         }
@@ -79,13 +79,13 @@ pipeline {
         stage('Docker Build & Push') {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
+                    withDockerRegistry(credentialsId: '999', toolName: 'docker') {
                         sh '''
                         echo "Building Docker image..."
                         docker build --no-cache -t saidevops123/book-myshow:latest -f bookmyshow-app/Dockerfile bookmyshow-app
 
                         echo "Pushing Docker image to Docker Hub..."
-                        docker push chilukuri268/book-myshow:latest
+                        docker push saidevops123/book-myshow:latest
                         '''
                     }
                 }
@@ -97,7 +97,7 @@ pipeline {
                 sh '''
                     docker stop bms || true
                     docker rm bms || true
-                    docker run -d --restart=always --name bms -p 3000:3000 chilukuri268/book-myshow:latest
+                    docker run -d --restart=always --name bms -p 3000:3000 saidevops123/book-myshow:latest
                 '''
             }
         }
