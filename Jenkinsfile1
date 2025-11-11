@@ -30,9 +30,9 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sonar_siva') {
+                withSonarQubeEnv('sonar_sivasonar-scanner') {
                     sh '''
-                        $SCANNER_HOME/bin/sonar-scanner \
+                        $SCANNER_HOME/bin/sonar_siva\
                         -Dsonar.projectName=BMS \
                         -Dsonar.projectKey=BMS
                     '''
